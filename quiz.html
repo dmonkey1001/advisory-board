@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>State CIO Conference Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .quiz-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: #f9fafb;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .option-btn {
+            transition: all 0.2s ease-in-out;
+        }
+        .option-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .correct {
+            background-color: #10b981 !important; /* Green-500 */
+            color: white !important;
+            border-color: #059669;
+        }
+        .incorrect {
+            background-color: #ef4444 !important; /* Red-500 */
+            color: white !important;
+            border-color: #dc2626;
+        }
+        #feedback {
+            min-height: 50px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div id="quiz-app" class="quiz-container">
+        <div id="start-screen">
+            <h1 class="text-4xl font-bold text-center text-gray-800 mb-4">State CIO Conference Quiz</h1>
+            <p class="text-lg text-center text-gray-600 mb-8">Test your knowledge of some fun IT and general facts about various states!</p>
+            <button id="start-btn" class="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition duration-300 text-xl shadow-lg">Start Quiz</button>
+        </div>
+
+        <div id="quiz-screen" class="hidden">
+            <div id="progress-container" class="mb-4">
+                <p class="text-sm text-gray-600 text-center">Question <span id="question-number"></span> of <span id="total-questions"></span></p>
+                <div class="w-full bg-gray-200 rounded-full h-2.5 mt-1">
+                    <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+                </div>
+            </div>
+            
+            <h2 id="question" class="text-2xl md:text-3xl font-semibold text-gray-800 mb-6 text-center"></h2>
+            
+            <div id="options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Options will be dynamically inserted here -->
+            </div>
+
+            <div id="feedback" class="mt-6 text-center">
+                <!-- Feedback text will appear here -->
+            </div>
+
+            <div class="mt-6 text-center">
+                <button id="next-btn" class="bg-gray-800 text-white font-bold py-2 px-8 rounded-lg hover:bg-gray-900 transition duration-300 hidden">Next</button>
+            </div>
+        </div>
+
+        <div id="result-screen" class="hidden text-center">
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">Quiz Complete!</h1>
+            <p class="text-2xl text-gray-600 mb-2">Your Score:</p>
+            <p id="score" class="text-6xl font-bold text-blue-600 mb-6"></p>
+            <p id="feedback-message" class="text-xl text-gray-700 mb-8"></p>
+            <button id="restart-btn" class="w-full md:w-auto bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition duration-300 text-xl shadow-lg">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Quiz Data ---
+        const quizData = [
+            {
+                question: "What is the official state dish of Texas?",
+                options: ["Barbecue Brisket", "Chili", "Pecan Pie", "Chicken Fried Steak"],
+                answer: "Chili",
+                explanation: "While all are Texas favorites, Chili was officially adopted as the state dish in 1977."
+            },
+            {
+                question: "Delaware is famous for being the legal home to a majority of what?",
+                options: ["Fortune 500 companies", "U.S. Presidents", "Major league sports teams", "National Parks"],
+                answer: "Fortune 500 companies",
+                explanation: "Over 65% of Fortune 500 companies are incorporated in Delaware, thanks to its business-friendly corporate laws."
+            },
+            {
+                question: "Which classic toy was invented in Philadelphia, Pennsylvania?",
+                options: ["LEGO", "Yo-yo", "Slinky", "Rubik's Cube"],
+                answer: "Slinky",
+                explanation: "The Slinky was invented by naval engineer Richard T. James in Philadelphia in the early 1940s."
+            },
+            {
+                question: "According to a 2023 study by the Consumer Technology Association, Maryland is ranked among the top 'Innovation ___________'.",
+                options: ["Hubs", "Leaders", "Champions", "Pioneers"],
+                answer: "Champions",
+                explanation: "Maryland was named an 'Innovation Champion,' ranking in the top tier of states for its ability to foster and sustain a technology sector."
+            },
+            {
+                question: "New Jersey has more of which type of restaurant per square mile than any other place in the world?",
+                options: ["Pizzerias", "Diners", "Bagel Shops", "Seafood Shacks"],
+                answer: "Diners",
+                explanation: "New Jersey is famously known as the 'Diner Capital of the World' for its high concentration of diners."
+            },
+            {
+                question: "The Massachusetts Institute of Technology (MIT) was a pioneer in what critical field during WWII?",
+                options: ["Nuclear energy", "Penicillin production", "Radar technology", "Jet propulsion"],
+                answer: "Radar technology",
+                explanation: "MIT's Radiation Laboratory was the leading center for radar research and development for the U.S. during World War II."
+            },
+            {
+                question: "What is famously missing from the street naming convention in Washington D.C.?",
+                options: ["A Street", "X Street", "J Street", "Z Street"],
+                answer: "J Street",
+                explanation: "There is no 'J' street in Washington D.C. The reason is debated, but one theory is that in the 18th century, 'I' and 'J' were often used interchangeably."
+            },
+            {
+                question: "North Carolina's Department of Commerce has a special office dedicated to fostering what?",
+                options: ["Agricultural Exports", "Film Production", "Science, Technology & Innovation", "Historical Preservation"],
+                answer: "Science, Technology & Innovation",
+                explanation: "The NC Office of Science, Technology & Innovation works to accelerate the growth of next-gen tech companies and tech adoption across the state."
+            },
+            {
+                question: "The Georgia Institute of Technology (Georgia Tech) was originally founded as a school for what discipline?",
+                options: ["Medicine", "Law", "Agriculture", "Mechanical Engineering"],
+                answer: "Mechanical Engineering",
+                explanation: "Georgia Tech was founded in 1885 during Reconstruction and initially only offered a degree in mechanical engineering."
+            },
+            {
+                question: "What does Michigan's official state motto, 'Si quaeris peninsulam amoenam circumspice,' translate to?",
+                options: ["The Great Lakes State", "If you seek a pleasant peninsula, look about you", "By valor and arms", "The Wolverine State"],
+                answer: "If you seek a pleasant peninsula, look about you",
+                explanation: "This motto reflects the state's unique geography, being composed of two large peninsulas."
+            },
+            {
+                question: "Arizona's tech sector is a national leader in which 'legacy' industry?",
+                options: ["Automotive Manufacturing", "Social Media", "Semiconductors and Aerospace", "Video Game Development"],
+                answer: "Semiconductors and Aerospace",
+                explanation: "Arizona has long been a hub for the semiconductor and aerospace/defense industries, which continue to be pillars of its tech economy."
+            },
+            {
+                question: "In 2023, New Mexico became the first state to adopt an official state what?",
+                options: ["State Cookie (Biscochito)", "State Tie (Bolo Tie)", "State Question ('Red or Green?')", "State Aroma (Roasting Green Chile)"],
+                answer: "State Aroma (Roasting Green Chile)",
+                explanation: "While the others are also official state symbols, the 'smell of roasting green chile' became the official State Aroma in 2023."
+            },
+            {
+                question: "What is the official state motto of Indiana?",
+                options: ["The Hoosier State", "The Crossroads of America", "Honest to Goodness Indiana", "On the Banks of the Wabash"],
+                answer: "The Crossroads of America",
+                explanation: "Adopted in 1937, this motto highlights Indiana's central location and the numerous interstate highways that pass through it."
+            }
+        ];
+
+        // --- DOM Elements ---
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+        
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const nextBtn = document.getElementById('next-btn');
+        
+        const questionEl = document.getElementById('question');
+        const optionsEl = document.getElementById('options');
+        const feedbackEl = document.getElementById('feedback');
+        
+        const questionNumberEl = document.getElementById('question-number');
+        const totalQuestionsEl = document.getElementById('total-questions');
+        const progressBar = document.getElementById('progress-bar');
+        
+        const scoreEl = document.getElementById('score');
+        const feedbackMessageEl = document.getElementById('feedback-message');
+
+        // --- State Variables ---
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let questions = [];
+
+        // --- Functions ---
+
+        /**
+         * Shuffles an array in place.
+         * @param {Array} array The array to shuffle.
+         */
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        /**
+         * Starts the quiz.
+         */
+        function startQuiz() {
+            // Shuffle the questions for a different order each time
+            questions = [...quizData];
+            shuffleArray(questions);
+            
+            currentQuestionIndex = 0;
+            score = 0;
+            startScreen.classList.add('hidden');
+            resultScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            nextBtn.classList.add('hidden');
+            showQuestion();
+        }
+
+        /**
+         * Displays the current question and options.
+         */
+        function showQuestion() {
+            resetState();
+            const currentQuestion = questions[currentQuestionIndex];
+            
+            // Update progress
+            questionNumberEl.textContent = currentQuestionIndex + 1;
+            totalQuestionsEl.textContent = questions.length;
+            const progressPercentage = ((currentQuestionIndex + 1) / questions.length) * 100;
+            progressBar.style.width = `${progressPercentage}%`;
+
+            questionEl.textContent = currentQuestion.question;
+            
+            // Shuffle options for variety
+            const shuffledOptions = [...currentQuestion.options];
+            shuffleArray(shuffledOptions);
+
+            shuffledOptions.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.classList.add('option-btn', 'w-full', 'p-4', 'border', 'border-gray-300', 'rounded-lg', 'text-left', 'text-lg', 'bg-white', 'hover:bg-gray-50', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
+                button.addEventListener('click', selectAnswer);
+                optionsEl.appendChild(button);
+            });
+        }
+
+        /**
+         * Resets the state for the next question.
+         */
+        function resetState() {
+            nextBtn.classList.add('hidden');
+            feedbackEl.innerHTML = '';
+            while (optionsEl.firstChild) {
+                optionsEl.removeChild(optionsEl.firstChild);
+            }
+        }
+
+        /**
+         * Handles the user's answer selection.
+         * @param {Event} e The click event.
+         */
+        function selectAnswer(e) {
+            const selectedBtn = e.target;
+            const correct = selectedBtn.textContent === questions[currentQuestionIndex].answer;
+
+            if (correct) {
+                score++;
+                selectedBtn.classList.add('correct');
+                feedbackEl.innerHTML = `<p class="text-green-600 font-semibold text-lg">Correct!</p>`;
+            } else {
+                selectedBtn.classList.add('incorrect');
+                feedbackEl.innerHTML = `<p class="text-red-600 font-semibold text-lg">Sorry, that's not right.</p>`;
+            }
+            
+            // Show the explanation
+            const explanation = document.createElement('p');
+            explanation.textContent = questions[currentQuestionIndex].explanation;
+            explanation.classList.add('text-gray-600', 'mt-2');
+            feedbackEl.appendChild(explanation);
+
+            // Disable all option buttons
+            Array.from(optionsEl.children).forEach(button => {
+                button.disabled = true;
+                // Highlight the correct answer if the user was wrong
+                if (!correct && button.textContent === questions[currentQuestionIndex].answer) {
+                    button.classList.add('correct');
+                }
+            });
+
+            nextBtn.classList.remove('hidden');
+        }
+        
+        /**
+         * Shows the final results screen.
+         */
+        function showResults() {
+            quizScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+            
+            const percentage = Math.round((score / questions.length) * 100);
+            scoreEl.textContent = `${percentage}%`;
+            
+            let message = '';
+            if (percentage === 100) {
+                message = "Perfect score! You're a true state trivia master!";
+            } else if (percentage >= 75) {
+                message = "Excellent work! You really know your stuff.";
+            } else if (percentage >= 50) {
+                message = "Good job! A respectable score.";
+            } else {
+                message = "You learned something new! Better luck next time.";
+            }
+            feedbackMessageEl.textContent = message;
+        }
+
+        /**
+         * Moves to the next question or ends the quiz.
+         */
+        function handleNextButton() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                showQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        // --- Event Listeners ---
+        startBtn.addEventListener('click', startQuiz);
+        restartBtn.addEventListener('click', startQuiz);
+        nextBtn.addEventListener('click', handleNextButton);
+    </script>
+</body>
+</html>
