@@ -30,12 +30,25 @@
         .option-btn {
             background-color: #ffffff;
             border: 1px solid #d1d5db; /* gray-300 */
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .option-btn:not(:disabled):hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .option-btn:disabled {
             cursor: not-allowed;
         }
         .correct {
             background-color: #10b981 !important; /* Green-500 */
             color: white !important;
             border-color: #059669;
+        }
+        .incorrect {
+            background-color: #ef4444 !important; /* Red-500 */
+            color: white !important;
+            border-color: #dc2626;
         }
         #explanation-container {
             background-color: #eef2ff; /* indigo-50 */
@@ -153,6 +166,7 @@
         let questions = [];
         let timerInterval;
         let timeLeft;
+        let answerSelected = false;
 
         // --- Functions ---
 
@@ -201,8 +215,8 @@
             shuffledOptions.forEach(option => {
                 const button = document.createElement('button');
                 button.textContent = option;
-                button.classList.add('option-btn', 'w-full', 'p-4', 'rounded-lg', 'text-left', 'text-lg', 'transition-colors', 'duration-300');
-                button.disabled = true; // Make buttons unclickable
+                button.classList.add('option-btn', 'w-full', 'p-4', 'rounded-lg', 'text-left', 'text-lg');
+                button.addEventListener('click', handleOptionClick);
                 optionsEl.appendChild(button);
             });
             
@@ -213,6 +227,7 @@
          * Resets the UI for the next question.
          */
         function resetState() {
+            answerSelected = false;
             explanationContainer.classList.add('hidden');
             timerDisplay.classList.remove('text-red-500');
             timerDisplay.classList.add('text-blue-500');
@@ -224,6 +239,18 @@
             if (timerInterval) {
                 clearInterval(timerInterval);
             }
+        }
+
+        /**
+         * Handles the user clicking an option.
+         * @param {Event} e The click event.
+         */
+        function handleOptionClick(e) {
+            if (answerSelected) return; // Prevent multiple clicks
+            answerSelected = true;
+            
+            const selectedBtn = e.target;
+            showAnswer(selectedBtn);
         }
 
         /**
@@ -241,19 +268,36 @@
                     timerDisplay.classList.add('text-red-500');
                 }
                 if (timeLeft <= 0) {
-                    showAnswer();
+                    showAnswer(null); // Pass null to indicate timer ran out
                 }
             }, 1000);
         }
 
         /**
          * Stops the timer, reveals the correct answer, and sets a timeout to auto-advance.
+         * @param {HTMLElement|null} selectedBtn The button the user clicked, or null if the timer expired.
          */
-        function showAnswer() {
+        function showAnswer(selectedBtn) {
             clearInterval(timerInterval);
+            answerSelected = true;
             const currentQuestion = questions[currentQuestionIndex];
             
-            // Highlight the correct answer
+            // Disable all buttons
+            Array.from(optionsEl.children).forEach(button => {
+                button.disabled = true;
+            });
+
+            // If a button was selected, check if it's correct
+            if (selectedBtn) {
+                const isCorrect = selectedBtn.textContent === currentQuestion.answer;
+                if (isCorrect) {
+                    selectedBtn.classList.add('correct');
+                } else {
+                    selectedBtn.classList.add('incorrect');
+                }
+            }
+            
+            // Always highlight the correct answer
             Array.from(optionsEl.children).forEach(button => {
                 if (button.textContent === currentQuestion.answer) {
                     button.classList.add('correct');
