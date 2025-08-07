@@ -17,26 +17,31 @@
             background-color: #f9fafb;
             border-radius: 1rem;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .timer {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #3b82f6; /* blue-500 */
         }
         .option-btn {
-            transition: all 0.2s ease-in-out;
-        }
-        .option-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            background-color: #ffffff;
+            border: 1px solid #d1d5db; /* gray-300 */
+            cursor: not-allowed;
         }
         .correct {
             background-color: #10b981 !important; /* Green-500 */
             color: white !important;
             border-color: #059669;
         }
-        .incorrect {
-            background-color: #ef4444 !important; /* Red-500 */
-            color: white !important;
-            border-color: #dc2626;
-        }
-        #feedback {
-            min-height: 50px;
+        #explanation-container {
+            background-color: #eef2ff; /* indigo-50 */
+            border-left: 4px solid #4f46e5; /* indigo-600 */
+            padding: 1rem;
+            border-radius: 0.5rem;
         }
     </style>
 </head>
@@ -44,8 +49,8 @@
 
     <div id="quiz-app" class="quiz-container">
         <div id="start-screen">
-            <h1 class="text-4xl font-bold text-center text-gray-800 mb-4">State CIO Conference Quiz</h1>
-            <p class="text-lg text-center text-gray-600 mb-8">Test your knowledge of some fun IT and general facts about various states!</p>
+            <h1 class="text-4xl font-bold text-center text-gray-800 mb-4">SLG Advisory Board Quiz</h1>
+            <p class="text-lg text-center text-gray-600 mb-8">Test your knowledge with this timed trivia about various states!</p>
             <button id="start-btn" class="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition duration-300 text-xl shadow-lg">Start Quiz</button>
         </div>
 
@@ -53,141 +58,101 @@
             <div id="progress-container" class="mb-4">
                 <p class="text-sm text-gray-600 text-center">Question <span id="question-number"></span> of <span id="total-questions"></span></p>
                 <div class="w-full bg-gray-200 rounded-full h-2.5 mt-1">
-                    <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+                    <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-width duration-500"></div>
                 </div>
             </div>
             
-            <h2 id="question" class="text-2xl md:text-3xl font-semibold text-gray-800 mb-6 text-center"></h2>
+            <div id="timer-display" class="text-center my-4 timer">15</div>
             
-            <div id="options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <h2 id="question" class="text-2xl md:text-3xl font-semibold text-gray-800 mb-6 text-center" style="min-height: 100px;"></h2>
+            
+            <div id="options" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <!-- Options will be dynamically inserted here -->
             </div>
-
-            <div id="feedback" class="mt-6 text-center">
-                <!-- Feedback text will appear here -->
+            
+            <div id="explanation-container" class="hidden mt-6 text-left">
+                <p id="explanation" class="text-gray-700"></p>
             </div>
 
-            <div class="mt-6 text-center">
-                <button id="next-btn" class="bg-gray-800 text-white font-bold py-2 px-8 rounded-lg hover:bg-gray-900 transition duration-300 hidden">Next</button>
-            </div>
-        </div>
-
-        <div id="result-screen" class="hidden text-center">
-            <h1 class="text-4xl font-bold text-gray-800 mb-4">Quiz Complete!</h1>
-            <p class="text-2xl text-gray-600 mb-2">Your Score:</p>
-            <p id="score" class="text-6xl font-bold text-blue-600 mb-6"></p>
-            <p id="feedback-message" class="text-xl text-gray-700 mb-8"></p>
-            <button id="restart-btn" class="w-full md:w-auto bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition duration-300 text-xl shadow-lg">Play Again</button>
         </div>
     </div>
 
     <script>
         // --- Quiz Data ---
         const quizData = [
-            {
-                question: "What is the official state dish of Texas?",
-                options: ["Barbecue Brisket", "Chili", "Pecan Pie", "Chicken Fried Steak"],
-                answer: "Chili",
-                explanation: "While all are Texas favorites, Chili was officially adopted as the state dish in 1977."
-            },
-            {
-                question: "Delaware is famous for being the legal home to a majority of what?",
-                options: ["Fortune 500 companies", "U.S. Presidents", "Major league sports teams", "National Parks"],
-                answer: "Fortune 500 companies",
-                explanation: "Over 65% of Fortune 500 companies are incorporated in Delaware, thanks to its business-friendly corporate laws."
-            },
-            {
-                question: "Which classic toy was invented in Philadelphia, Pennsylvania?",
-                options: ["LEGO", "Yo-yo", "Slinky", "Rubik's Cube"],
-                answer: "Slinky",
-                explanation: "The Slinky was invented by naval engineer Richard T. James in Philadelphia in the early 1940s."
-            },
-            {
-                question: "According to a 2023 study by the Consumer Technology Association, Maryland is ranked among the top 'Innovation ___________'.",
-                options: ["Hubs", "Leaders", "Champions", "Pioneers"],
-                answer: "Champions",
-                explanation: "Maryland was named an 'Innovation Champion,' ranking in the top tier of states for its ability to foster and sustain a technology sector."
-            },
-            {
-                question: "New Jersey has more of which type of restaurant per square mile than any other place in the world?",
-                options: ["Pizzerias", "Diners", "Bagel Shops", "Seafood Shacks"],
-                answer: "Diners",
-                explanation: "New Jersey is famously known as the 'Diner Capital of the World' for its high concentration of diners."
-            },
-            {
-                question: "The Massachusetts Institute of Technology (MIT) was a pioneer in what critical field during WWII?",
-                options: ["Nuclear energy", "Penicillin production", "Radar technology", "Jet propulsion"],
-                answer: "Radar technology",
-                explanation: "MIT's Radiation Laboratory was the leading center for radar research and development for the U.S. during World War II."
-            },
-            {
-                question: "What is famously missing from the street naming convention in Washington D.C.?",
-                options: ["A Street", "X Street", "J Street", "Z Street"],
-                answer: "J Street",
-                explanation: "There is no 'J' street in Washington D.C. The reason is debated, but one theory is that in the 18th century, 'I' and 'J' were often used interchangeably."
-            },
-            {
-                question: "North Carolina's Department of Commerce has a special office dedicated to fostering what?",
-                options: ["Agricultural Exports", "Film Production", "Science, Technology & Innovation", "Historical Preservation"],
-                answer: "Science, Technology & Innovation",
-                explanation: "The NC Office of Science, Technology & Innovation works to accelerate the growth of next-gen tech companies and tech adoption across the state."
-            },
-            {
-                question: "The Georgia Institute of Technology (Georgia Tech) was originally founded as a school for what discipline?",
-                options: ["Medicine", "Law", "Agriculture", "Mechanical Engineering"],
-                answer: "Mechanical Engineering",
-                explanation: "Georgia Tech was founded in 1885 during Reconstruction and initially only offered a degree in mechanical engineering."
-            },
-            {
-                question: "What does Michigan's official state motto, 'Si quaeris peninsulam amoenam circumspice,' translate to?",
-                options: ["The Great Lakes State", "If you seek a pleasant peninsula, look about you", "By valor and arms", "The Wolverine State"],
-                answer: "If you seek a pleasant peninsula, look about you",
-                explanation: "This motto reflects the state's unique geography, being composed of two large peninsulas."
-            },
-            {
-                question: "Arizona's tech sector is a national leader in which 'legacy' industry?",
-                options: ["Automotive Manufacturing", "Social Media", "Semiconductors and Aerospace", "Video Game Development"],
-                answer: "Semiconductors and Aerospace",
-                explanation: "Arizona has long been a hub for the semiconductor and aerospace/defense industries, which continue to be pillars of its tech economy."
-            },
-            {
-                question: "In 2023, New Mexico became the first state to adopt an official state what?",
-                options: ["State Cookie (Biscochito)", "State Tie (Bolo Tie)", "State Question ('Red or Green?')", "State Aroma (Roasting Green Chile)"],
-                answer: "State Aroma (Roasting Green Chile)",
-                explanation: "While the others are also official state symbols, the 'smell of roasting green chile' became the official State Aroma in 2023."
-            },
-            {
-                question: "What is the official state motto of Indiana?",
-                options: ["The Hoosier State", "The Crossroads of America", "Honest to Goodness Indiana", "On the Banks of the Wabash"],
-                answer: "The Crossroads of America",
-                explanation: "Adopted in 1937, this motto highlights Indiana's central location and the numerous interstate highways that pass through it."
-            }
+            // Original Set
+            { question: "What is the official state dish of Texas?", options: ["Barbecue Brisket", "Chili", "Pecan Pie", "Chicken Fried Steak"], answer: "Chili", explanation: "While all are Texas favorites, Chili was officially adopted as the state dish in 1977." },
+            { question: "Delaware is famous for being the legal home to a majority of what?", options: ["Fortune 500 companies", "U.S. Presidents", "Major league sports teams", "National Parks"], answer: "Fortune 500 companies", explanation: "Over 65% of Fortune 500 companies are incorporated in Delaware, thanks to its business-friendly corporate laws." },
+            { question: "Which classic toy was invented in Philadelphia, Pennsylvania?", options: ["LEGO", "Yo-yo", "Slinky", "Rubik's Cube"], answer: "Slinky", explanation: "The Slinky was invented by naval engineer Richard T. James in Philadelphia in the early 1940s." },
+            { question: "According to a 2023 study by the Consumer Technology Association, Maryland is ranked among the top 'Innovation ___________'.", options: ["Hubs", "Leaders", "Champions", "Pioneers"], answer: "Champions", explanation: "Maryland was named an 'Innovation Champion,' ranking in the top tier of states for its ability to foster and sustain a technology sector." },
+            { question: "New Jersey has more of which type of restaurant per square mile than any other place in the world?", options: ["Pizzerias", "Diners", "Bagel Shops", "Seafood Shacks"], answer: "Diners", explanation: "New Jersey is famously known as the 'Diner Capital of the World' for its high concentration of diners." },
+            { question: "The Massachusetts Institute of Technology (MIT) was a pioneer in what critical field during WWII?", options: ["Nuclear energy", "Penicillin production", "Radar technology", "Jet propulsion"], answer: "Radar technology", explanation: "MIT's Radiation Laboratory was the leading center for radar research and development for the U.S. during World War II." },
+            { question: "What is famously missing from the street naming convention in Washington D.C.?", options: ["A Street", "X Street", "J Street", "Z Street"], answer: "J Street", explanation: "There is no 'J' street in Washington D.C. The reason is debated, but one theory is that in the 18th century, 'I' and 'J' were often used interchangeably." },
+            { question: "North Carolina's Department of Commerce has a special office dedicated to fostering what?", options: ["Agricultural Exports", "Film Production", "Science, Technology & Innovation", "Historical Preservation"], answer: "Science, Technology & Innovation", explanation: "The NC Office of Science, Technology & Innovation works to accelerate the growth of next-gen tech companies and tech adoption across the state." },
+            { question: "The Georgia Institute of Technology (Georgia Tech) was originally founded as a school for what discipline?", options: ["Medicine", "Law", "Agriculture", "Mechanical Engineering"], answer: "Mechanical Engineering", explanation: "Georgia Tech was founded in 1885 during Reconstruction and initially only offered a degree in mechanical engineering." },
+            { question: "What does Michigan's official state motto, 'Si quaeris peninsulam amoenam circumspice,' translate to?", options: ["The Great Lakes State", "If you seek a pleasant peninsula, look about you", "By valor and arms", "The Wolverine State"], answer: "If you seek a pleasant peninsula, look about you", explanation: "This motto reflects the state's unique geography, being composed of two large peninsulas." },
+            { question: "Arizona's tech sector is a national leader in which 'legacy' industry?", options: ["Automotive Manufacturing", "Social Media", "Semiconductors and Aerospace", "Video Game Development"], answer: "Semiconductors and Aerospace", explanation: "Arizona has long been a hub for the semiconductor and aerospace/defense industries, which continue to be pillars of its tech economy." },
+            { question: "In 2023, New Mexico became the first state to adopt an official state what?", options: ["State Cookie (Biscochito)", "State Tie (Bolo Tie)", "State Question ('Red or Green?')", "State Aroma (Roasting Green Chile)"], answer: "State Aroma (Roasting Green Chile)", explanation: "While the others are also official state symbols, the 'smell of roasting green chile' became the official State Aroma in 2023." },
+            { question: "What is the official state motto of Indiana?", options: ["The Hoosier State", "The Crossroads of America", "Honest to Goodness Indiana", "On the Banks of the Wabash"], answer: "The Crossroads of America", explanation: "Adopted in 1937, this motto highlights Indiana's central location and the numerous interstate highways that pass through it." },
+            
+            // New Questions
+            { question: "What Texas-based company is a world leader in PC manufacturing?", options: ["IBM", "Apple", "Dell", "HP"], answer: "Dell", explanation: "Dell was founded in Michael Dell's dorm room at the University of Texas at Austin in 1984." },
+            { question: "The emoticon :-) was invented at which Pennsylvania university?", options: ["University of Pennsylvania", "Penn State", "Carnegie Mellon University", "Drexel University"], answer: "Carnegie Mellon University", explanation: "Computer scientist Scott Fahlman proposed the use of :-) and :-( at Carnegie Mellon in 1982." },
+            { question: "Maryland is home to the headquarters of which major U.S. cybersecurity and intelligence agency?", options: ["CIA", "FBI", "NSA", "DIA"], answer: "NSA", explanation: "The National Security Agency (NSA) is headquartered at Fort Meade, Maryland." },
+            { question: "Thomas Edison invented the phonograph and light bulb in his lab located in which New Jersey town?", options: ["Princeton", "Newark", "Menlo Park", "Trenton"], answer: "Menlo Park", explanation: "Edison's famous 'invention factory' in Menlo Park produced hundreds of patents." },
+            { question: "What is the nickname for the major tech corridor along Route 128 in Massachusetts?", options: ["Silicon Alley", "America's Technology Highway", "The Brain-way", "The Platinum Corridor"], answer: "America's Technology Highway", explanation: "Route 128 was one of the first high-tech corridors in the US, predating Silicon Valley's boom." },
+            { question: "What North Carolina research center is one of the largest in the world, housing companies like IBM, Cisco, and GSK?", options: ["Innovation Quarter", "Centennial Campus", "Research Triangle Park", "NC Research Campus"], answer: "Research Triangle Park", explanation: "Research Triangle Park (RTP) is a massive research park located between Raleigh, Durham, and Chapel Hill." },
+            { question: "Atlanta, Georgia is a major hub for which specific technology sub-sector?", options: ["Cryptocurrency", "FinTech (Financial Technology)", "AgriTech (Agricultural Technology)", "SpaceTech"], answer: "FinTech (Financial Technology)", explanation: "Often called 'Transaction Alley,' Atlanta processes more than 70% of all U.S. payment transactions." },
+            { question: "The first-ever automobile was sold in which Michigan city?", options: ["Lansing", "Flint", "Detroit", "Grand Rapids"], answer: "Detroit", explanation: "In 1896, Charles Brady King sold the first car in Detroit, which would soon become the 'Motor City'." },
+            { question: "Arizona State University is known for being ranked #1 in the U.S. for what?", options: ["Engineering", "Business", "Innovation", "Party Schools"], answer: "Innovation", explanation: "U.S. News & World Report has ranked ASU #1 in innovation for multiple consecutive years, ahead of Stanford and MIT." },
+            { question: "Which two U.S. Department of Energy national laboratories are located in New Mexico?", options: ["Oak Ridge and Argonne", "Los Alamos and Sandia", "Lawrence Livermore and Brookhaven", "Fermilab and SLAC"], answer: "Los Alamos and Sandia", explanation: "These labs are major centers for national security, science, and technology research." },
+            { question: "Indiana is a leader in which advanced industry, combining manufacturing with technology?", options: ["Life Sciences", "Aerospace", "Robotics", "3D Printing"], answer: "Life Sciences", explanation: "Indiana has a high concentration of pharmaceutical, medical device, and biotech companies." },
+            { question: "The first electronic digital computer, the ENIAC, was developed at which university in Pennsylvania?", options: ["University of Pittsburgh", "Carnegie Mellon", "University of Pennsylvania", "Lehigh University"], answer: "University of Pennsylvania", explanation: "ENIAC was formally dedicated at the University of Pennsylvania on February 15, 1946." },
+            { question: "What is the official state insect of Delaware?", options: ["Monarch Butterfly", "Honeybee", "7-Spotted Ladybug", "Firefly"], answer: "7-Spotted Ladybug", explanation: "The ladybug was chosen in 1974 after a campaign by a 2nd-grade class." },
+            { question: "Maryland's state sport, jousting, was officially designated in what year?", options: ["1776", "1812", "1962", "2004"], answer: "1962", explanation: "Jousting has been practiced in Maryland for over 300 years and became the official state sport in 1962." },
+            { question: "The first organized baseball game was played in what New Jersey city?", options: ["Atlantic City", "Hoboken", "Trenton", "Camden"], answer: "Hoboken", explanation: "The first officially recorded, modern baseball game was played in 1846 at Elysian Fields in Hoboken." },
+            { question: "The first successful telephone call was made by Alexander Graham Bell in what city?", options: ["New York City", "Philadelphia", "Boston, MA", "Washington, D.C."], answer: "Boston, MA", explanation: "The call from Bell to his assistant Thomas Watson occurred in Boston on March 10, 1876." },
+            { question: "The District of Columbia's motto, 'Justitia Omnibus,' translates to what?", options: ["Justice for All", "In God We Trust", "One From Many", "For the People"], answer: "Justice for All", explanation: "This motto reflects the purpose of the federal government seated in the district." },
+            { question: "The first successful flight by the Wright Brothers took place at Kitty Hawk in which state?", options: ["Ohio", "North Carolina", "Virginia", "South Carolina"], answer: "North Carolina", explanation: "Though from Ohio, the Wright Brothers chose Kitty Hawk, NC, for its steady winds." },
+            { question: "What popular soft drink was invented in Atlanta, Georgia in 1886?", options: ["Pepsi-Cola", "Dr. Pepper", "Coca-Cola", "7-Up"], answer: "Coca-Cola", explanation: "Pharmacist John Stith Pemberton created the original formula for Coca-Cola in Atlanta." },
+            { question: "What Michigan city is known as the 'Cereal Capital of the World'?", options: ["Grand Rapids", "Kalamazoo", "Battle Creek", "Ann Arbor"], answer: "Battle Creek", explanation: "Battle Creek is the headquarters of the Kellogg Company and Post Consumer Brands." },
+            { question: "Which famous Biosphere is located in Arizona, serving as a center for research about Earth and its living systems?", options: ["Epcot", "Biosphere 2", "Project Eden", "The Glasshouse"], answer: "Biosphere 2", explanation: "Biosphere 2 is a large-scale Earth system science research facility located near Oracle, Arizona." },
+            { question: "What is the official state question of New Mexico?", options: ["Red or Green?", "Hot enough for ya?", "Is it a dry heat?", "Did you see the sunset?"], answer: "Red or Green?", explanation: "This refers to the choice of red or green chile when ordering New Mexican cuisine, officially adopted in 1999." },
+            { question: "The Indianapolis Motor Speedway, home of the Indy 500, could fit how many major landmarks inside its oval?", options: ["The White House", "Yankee Stadium", "The Vatican City", "All of the above"], answer: "All of the above", explanation: "The massive 2.5-mile oval can comfortably fit Yankee Stadium, the Rose Bowl, the Roman Colosseum, Churchill Downs, and the Vatican City inside." },
+            { question: "Texas Instruments, a major tech company, invented what common handheld device in 1967?", options: ["The Pocket TV", "The Walkie-Talkie", "The Handheld Electronic Calculator", "The Digital Watch"], answer: "The Handheld Electronic Calculator", explanation: "This invention revolutionized mathematics and engineering work for students and professionals." },
+            { question: "The world's largest stone building, the Pentagon, is located in which state?", options: ["Maryland", "District of Columbia", "Virginia", "Delaware"], answer: "Virginia", explanation: "Though associated with D.C., the Pentagon is physically located in Arlington, Virginia." },
+            { question: "Which state was the first to ratify the U.S. Constitution?", options: ["Pennsylvania", "Virginia", "Delaware", "Massachusetts"], answer: "Delaware", explanation: "Delaware ratified the Constitution on December 7, 1787, earning its nickname 'The First State'." },
+            { question: "The first drive-in movie theater opened in 1933 in which state?", options: ["California", "New Jersey", "Texas", "Ohio"], answer: "New Jersey", explanation: "The first drive-in theater was opened in Camden County, New Jersey." },
+            { question: "The first public library in the United States was established in which state?", options: ["Pennsylvania", "New York", "Massachusetts", "Virginia"], answer: "Massachusetts", explanation: "The Boston Public Library, founded in 1848, was the first large free municipal library in the U.S." },
+            { question: "The barcode was first scanned on a pack of Wrigley's gum in a Marsh supermarket in which state?", options: ["Michigan", "Indiana", "Ohio", "Illinois"], answer: "Ohio", explanation: "This historic scan took place in Troy, Ohio, in 1974, launching the UPC system." },
+            { question: "What is the official state fossil of Michigan?", options: ["T-Rex", "Triceratops", "Mastodon", "Megalodon"], answer: "Mastodon", explanation: "The American Mastodon was designated the official state fossil of Michigan in 2002." },
+            { question: "What city in Georgia is known as the 'Carpet Capital of the World'?", options: ["Savannah", "Macon", "Dalton", "Augusta"], answer: "Dalton", explanation: "The city of Dalton and the surrounding area produce more than 70% of the world's carpets." },
+            { question: "The world's first traffic light was installed in 1914 in which state?", options: ["New York", "Pennsylvania", "Ohio", "Michigan"], answer: "Ohio", explanation: "The first electric traffic signal was installed on the corner of East 105th Street and Euclid Avenue in Cleveland, Ohio." },
+            { question: "The official state nickname of Arizona is what?", options: ["The Copper State", "The Sunset State", "The Grand Canyon State", "The Apache State"], answer: "The Grand Canyon State", explanation: "This nickname celebrates the state's most famous natural wonder." },
+            { question: "What is the official state aircraft of Indiana?", options: ["Grumman F-14 Tomcat", "P-51 Mustang", "SR-71 Blackbird", "Hoosier Spirit II"], answer: "Hoosier Spirit II", explanation: "The 'Hoosier Spirit II' is a specific Piper Malibu aircraft that flew around the world in 1989, and was designated the official state aircraft." },
+            { question: "The world's largest office building by floor area is located in which state?", options: ["New York", "Illinois", "Virginia", "Texas"], answer: "Virginia", explanation: "The Pentagon in Arlington, Virginia, has about 6.5 million square feet of total floor space." }
         ];
 
         // --- DOM Elements ---
         const startScreen = document.getElementById('start-screen');
         const quizScreen = document.getElementById('quiz-screen');
-        const resultScreen = document.getElementById('result-screen');
-        
         const startBtn = document.getElementById('start-btn');
-        const restartBtn = document.getElementById('restart-btn');
-        const nextBtn = document.getElementById('next-btn');
-        
         const questionEl = document.getElementById('question');
         const optionsEl = document.getElementById('options');
-        const feedbackEl = document.getElementById('feedback');
-        
         const questionNumberEl = document.getElementById('question-number');
         const totalQuestionsEl = document.getElementById('total-questions');
         const progressBar = document.getElementById('progress-bar');
-        
-        const scoreEl = document.getElementById('score');
-        const feedbackMessageEl = document.getElementById('feedback-message');
+        const timerDisplay = document.getElementById('timer-display');
+        const explanationContainer = document.getElementById('explanation-container');
+        const explanationEl = document.getElementById('explanation');
 
         // --- State Variables ---
+        const TIME_PER_QUESTION = 15; // seconds
+        const TIME_AFTER_ANSWER = 5; // seconds
         let currentQuestionIndex = 0;
-        let score = 0;
         let questions = [];
+        let timerInterval;
+        let timeLeft;
 
         // --- Functions ---
 
@@ -206,21 +171,16 @@
          * Starts the quiz.
          */
         function startQuiz() {
-            // Shuffle the questions for a different order each time
             questions = [...quizData];
             shuffleArray(questions);
-            
             currentQuestionIndex = 0;
-            score = 0;
             startScreen.classList.add('hidden');
-            resultScreen.classList.add('hidden');
             quizScreen.classList.remove('hidden');
-            nextBtn.classList.add('hidden');
             showQuestion();
         }
 
         /**
-         * Displays the current question and options.
+         * Displays the current question and starts the timer.
          */
         function showQuestion() {
             resetState();
@@ -241,97 +201,88 @@
             shuffledOptions.forEach(option => {
                 const button = document.createElement('button');
                 button.textContent = option;
-                button.classList.add('option-btn', 'w-full', 'p-4', 'border', 'border-gray-300', 'rounded-lg', 'text-left', 'text-lg', 'bg-white', 'hover:bg-gray-50', 'focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500');
-                button.addEventListener('click', selectAnswer);
+                button.classList.add('option-btn', 'w-full', 'p-4', 'rounded-lg', 'text-left', 'text-lg', 'transition-colors', 'duration-300');
+                button.disabled = true; // Make buttons unclickable
                 optionsEl.appendChild(button);
             });
+            
+            startTimer();
         }
 
         /**
-         * Resets the state for the next question.
+         * Resets the UI for the next question.
          */
         function resetState() {
-            nextBtn.classList.add('hidden');
-            feedbackEl.innerHTML = '';
+            explanationContainer.classList.add('hidden');
+            timerDisplay.classList.remove('text-red-500');
+            timerDisplay.classList.add('text-blue-500');
+            
             while (optionsEl.firstChild) {
                 optionsEl.removeChild(optionsEl.firstChild);
             }
+            
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
         }
 
         /**
-         * Handles the user's answer selection.
-         * @param {Event} e The click event.
+         * Starts the countdown timer for the current question.
          */
-        function selectAnswer(e) {
-            const selectedBtn = e.target;
-            const correct = selectedBtn.textContent === questions[currentQuestionIndex].answer;
+        function startTimer() {
+            timeLeft = TIME_PER_QUESTION;
+            timerDisplay.textContent = timeLeft;
 
-            if (correct) {
-                score++;
-                selectedBtn.classList.add('correct');
-                feedbackEl.innerHTML = `<p class="text-green-600 font-semibold text-lg">Correct!</p>`;
-            } else {
-                selectedBtn.classList.add('incorrect');
-                feedbackEl.innerHTML = `<p class="text-red-600 font-semibold text-lg">Sorry, that's not right.</p>`;
-            }
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = timeLeft;
+                if (timeLeft <= 5) {
+                    timerDisplay.classList.remove('text-blue-500');
+                    timerDisplay.classList.add('text-red-500');
+                }
+                if (timeLeft <= 0) {
+                    showAnswer();
+                }
+            }, 1000);
+        }
+
+        /**
+         * Stops the timer, reveals the correct answer, and sets a timeout to auto-advance.
+         */
+        function showAnswer() {
+            clearInterval(timerInterval);
+            const currentQuestion = questions[currentQuestionIndex];
             
-            // Show the explanation
-            const explanation = document.createElement('p');
-            explanation.textContent = questions[currentQuestionIndex].explanation;
-            explanation.classList.add('text-gray-600', 'mt-2');
-            feedbackEl.appendChild(explanation);
-
-            // Disable all option buttons
+            // Highlight the correct answer
             Array.from(optionsEl.children).forEach(button => {
-                button.disabled = true;
-                // Highlight the correct answer if the user was wrong
-                if (!correct && button.textContent === questions[currentQuestionIndex].answer) {
+                if (button.textContent === currentQuestion.answer) {
                     button.classList.add('correct');
                 }
             });
 
-            nextBtn.classList.remove('hidden');
+            // Show explanation
+            explanationEl.textContent = currentQuestion.explanation;
+            explanationContainer.classList.remove('hidden');
+            
+            // Wait for a few seconds, then move to the next question
+            setTimeout(handleNextQuestion, TIME_AFTER_ANSWER * 1000);
         }
         
         /**
-         * Shows the final results screen.
+         * Moves to the next question or restarts the quiz.
          */
-        function showResults() {
-            quizScreen.classList.add('hidden');
-            resultScreen.classList.remove('hidden');
-            
-            const percentage = Math.round((score / questions.length) * 100);
-            scoreEl.textContent = `${percentage}%`;
-            
-            let message = '';
-            if (percentage === 100) {
-                message = "Perfect score! You're a true state trivia master!";
-            } else if (percentage >= 75) {
-                message = "Excellent work! You really know your stuff.";
-            } else if (percentage >= 50) {
-                message = "Good job! A respectable score.";
-            } else {
-                message = "You learned something new! Better luck next time.";
-            }
-            feedbackMessageEl.textContent = message;
-        }
-
-        /**
-         * Moves to the next question or ends the quiz.
-         */
-        function handleNextButton() {
+        function handleNextQuestion() {
             currentQuestionIndex++;
             if (currentQuestionIndex < questions.length) {
                 showQuestion();
             } else {
-                showResults();
+                // Restart the quiz automatically
+                startQuiz();
             }
         }
 
         // --- Event Listeners ---
         startBtn.addEventListener('click', startQuiz);
-        restartBtn.addEventListener('click', startQuiz);
-        nextBtn.addEventListener('click', handleNextButton);
     </script>
 </body>
 </html>
