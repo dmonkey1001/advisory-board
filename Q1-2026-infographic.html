@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 State CIO Priorities</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; opacity: 0; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+        
+        .priority-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .priority-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); }
+        
+        .rank-badge {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- Icons Defined as React Components to avoid CDN issues ---
+        
+        const IconBase = ({ children, size = 24, className = "", ...props }) => (
+            <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                width={size} 
+                height={size} 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                className={className} 
+                {...props}
+            >
+                {children}
+            </svg>
+        );
+
+        const Brain = (props) => (
+            <IconBase {...props}>
+                <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z" />
+                <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z" />
+            </IconBase>
+        );
+
+        const ShieldCheck = (props) => (
+            <IconBase {...props}>
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <path d="m9 12 2 2 4-4" />
+            </IconBase>
+        );
+
+        const BadgeDollarSign = (props) => (
+            <IconBase {...props}>
+                <path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.78 4.78 4 4 0 0 1-6.74 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.74Z" />
+                <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8" />
+                <path d="M12 18V6" />
+            </IconBase>
+        );
+
+        const RefreshCw = (props) => (
+            <IconBase {...props}>
+                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                <path d="M21 3v5h-5" />
+                <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                <path d="M8 21h-5v-5" />
+            </IconBase>
+        );
+
+        const MonitorSmartphone = (props) => (
+            <IconBase {...props}>
+                <path d="M18 8V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h8" />
+                <path d="M10 19v-3.96 3.15" />
+                <path d="M7 19h5" />
+                <rect width="6" height="10" x="16" y="12" rx="2" />
+            </IconBase>
+        );
+
+        const Accessibility = (props) => (
+            <IconBase {...props}>
+                <circle cx="16" cy="4" r="1" />
+                <path d="m18 19 1-7-6 1" />
+                <path d="m5 8 3-3 5.5 3-2.36 4.5" />
+                <path d="M4.24 14.5a5 5 0 0 0 6.88 6" />
+                <path d="M13.76 17.5a5 5 0 0 0-6.88-6" />
+            </IconBase>
+        );
+
+        const Fingerprint = (props) => (
+            <IconBase {...props}>
+                <path d="M2 12C2 6.5 6.5 2 12 2a10 10 0 0 1 8 4" />
+                <path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2" />
+                <path d="M8.65 22c.21-.66.45-1.32.57-2" />
+                <path d="M9 6.8a6 6 0 0 1 9 5.2c0 .47 0 .95-.07 1.43" />
+                <path d="M12 22a9.7 9.7 0 0 1 2.21-14.8" />
+                <path d="M12 22v-6.5" />
+                <path d="M12 22v-6.5" />
+                <path d="M12.13 6.6A6 6 0 0 1 12.02 12" />
+                <path d="M14.65 22c-.21-.66-.45-1.32-.57-2" />
+                <path d="M15.4 12c0-1.7-.5-3.3-1.4-4.8" />
+                <path d="M17.41 15.4c.06-.5.09-1 .09-1.5a8 8 0 0 0-1.6-4.9" />
+                <path d="M19.5 19.5c-.5-1.5-1-4.5-1-7.5a10 10 0 0 0-.66-3.6" />
+            </IconBase>
+        );
+
+        const Database = (props) => (
+            <IconBase {...props}>
+                <ellipse cx="12" cy="5" rx="9" ry="3" />
+                <path d="M3 5V19A9 3 0 0 0 21 19V5" />
+                <path d="M3 12A9 3 0 0 0 21 12" />
+            </IconBase>
+        );
+
+        const Merge = (props) => (
+            <IconBase {...props}>
+                <path d="m8 6 4-4 4 4" />
+                <path d="M12 2v10.3a4 4 0 0 1-1.172 2.872L4 22" />
+                <path d="m20 22-5-5" />
+            </IconBase>
+        );
+
+        const Cloud = (props) => (
+            <IconBase {...props}>
+                <path d="M17.5 19c0-3.037-2.463-5.5-5.5-5.5S6.5 15.963 6.5 19" />
+                <path d="M12 13.5a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11Z" />
+                <path d="M6.5 19H12" />
+                <path d="M17.5 19H19a2 2 0 0 0 0-4h-1.5" />
+            </IconBase>
+        );
+
+        const AppWindow = (props) => (
+            <IconBase {...props}>
+                <rect x="2" y="4" width="20" height="16" rx="2" />
+                <path d="M10 4v4" />
+                <path d="M2 8h20" />
+                <path d="M6 4v4" />
+            </IconBase>
+        );
+
+        const CloudRain = (props) => (
+            <IconBase {...props}>
+                <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
+                <path d="M16 14v6" />
+                <path d="M8 14v6" />
+                <path d="M12 16v6" />
+            </IconBase>
+        );
+
+        const Globe = (props) => (
+            <IconBase {...props}>
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+                <path d="M2 12h20" />
+            </IconBase>
+        );
+
+        const Lock = (props) => (
+            <IconBase {...props}>
+                <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </IconBase>
+        );
+
+        const Briefcase = (props) => (
+            <IconBase {...props}>
+                <rect width="20" height="14" x="2" y="7" rx="2" ry="2" />
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+            </IconBase>
+        );
+
+        const BarChart3 = (props) => (
+            <IconBase {...props}>
+                <path d="M3 3v18h18" />
+                <path d="M18 17V9" />
+                <path d="M13 17V5" />
+                <path d="M8 17v-3" />
+            </IconBase>
+        );
+
+        const Network = (props) => (
+            <IconBase {...props}>
+                <rect x="16" y="16" width="6" height="6" rx="1" />
+                <rect x="2" y="16" width="6" height="6" rx="1" />
+                <rect x="9" y="2" width="6" height="6" rx="1" />
+                <path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3" />
+                <path d="M12 12V8" />
+            </IconBase>
+        );
+
+        const Info = (props) => (
+            <IconBase {...props}>
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 16v-4" />
+                <path d="M12 8h.01" />
+            </IconBase>
+        );
+
+        // --- Data Source: 2026 NASCIO Report ---
+        const strategies = [
+            { rank: 1, title: "Artificial Intelligence", desc: "GenAI, Agentic AI, Machine Learning, Policy & Governance", icon: Brain, isNewTop: true },
+            { rank: 2, title: "Cybersecurity & Risk", desc: "Governance, Budget, Security Frameworks, Data Protection", icon: ShieldCheck, movedDown: true },
+            { rank: 3, title: "Budget & Cost Control", desc: "Fiscal Management, Strategies for Savings", icon: BadgeDollarSign, movedUp: true },
+            { rank: 4, title: "Modernization", desc: "Legacy Platforms, Business Process Improvement", icon: RefreshCw },
+            { rank: 5, title: "Digital Government", desc: "Digital Services, Portal Frameworks, CX", icon: MonitorSmartphone },
+            { rank: 6, title: "Accessibility", desc: "Digital Inclusion, Procurement, Compliance", icon: Accessibility, movedUp: true },
+            { rank: 7, title: "Identity & Access Mgmt", desc: "Citizen Services, Workforce Access", icon: Fingerprint },
+            { rank: 8, title: "Data Mgmt & Analytics", desc: "Governance, Strategy, BI", icon: Database },
+            { rank: 9, title: "Consolidation", desc: "Centralizing Services, Operations, Infrastructure", icon: Merge, isReturn: true },
+            { rank: 10, title: "Cloud Services", desc: "Strategy, Service Selection, Governance", icon: Cloud }
+        ];
+
+        const technologies = [
+            { rank: 1, title: "Artificial Intelligence", desc: "AI, GenAI, Machine Learning Solutions", icon: Brain },
+            { rank: 2, title: "App Modernization", desc: "Renovation, Replacement, Refactoring", icon: AppWindow },
+            { rank: 3, title: "Cloud Solutions", desc: "XaaS, Public/Private/Hybrid Clouds", icon: CloudRain },
+            { rank: 4, title: "Identity & Access Mgmt", desc: "Authentication, Credentialing", icon: Fingerprint },
+            { rank: 5, title: "Software as a Service", desc: "SaaS Adoption & Management", icon: Globe },
+            { rank: 6, title: "Security Tools", desc: "Enhancement Tools, Monitoring", icon: Lock },
+            { rank: 7, title: "ERP", desc: "Enterprise Resource Planning Systems", icon: Briefcase },
+            { rank: 8, title: "Data Management", desc: "Master Data Mgmt, Governance Tools", icon: Database },
+            { rank: 9, title: "Data Analytics", desc: "Predictive Analytics, Visualization", icon: BarChart3 },
+            { rank: 10, title: "Networking", desc: "Broadband, Connectivity", icon: Network }
+        ];
+
+        const PriorityCard = ({ item }) => {
+            const Icon = item.icon;
+            
+            return (
+                <div className="priority-card bg-white rounded-xl p-5 border border-slate-200 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <Icon size={80} className="text-blue-900" />
+                    </div>
+                    
+                    <div className="flex items-start gap-4 relative z-10">
+                        <div className="flex-shrink-0">
+                            <div className="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center text-blue-700 font-bold text-xl border border-blue-100 shadow-sm">
+                                #{item.rank}
+                            </div>
+                        </div>
+                        <div className="flex-grow">
+                            <div className="flex items-center gap-2 mb-1">
+                                <h3 className="font-bold text-slate-800 text-lg leading-tight">{item.title}</h3>
+                                {item.isNewTop && (
+                                    <span className="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-200 uppercase tracking-wide">
+                                        New #1
+                                    </span>
+                                )}
+                                {item.movedDown && (
+                                    <span className="bg-slate-100 text-slate-500 text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-200 uppercase tracking-wide">
+                                        Down from #1
+                                    </span>
+                                )}
+                                {item.isReturn && (
+                                    <span className="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-200 uppercase tracking-wide">
+                                        Returns to list
+                                    </span>
+                                )}
+                            </div>
+                            <p className="text-slate-500 text-sm">{item.desc}</p>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [view, setView] = useState('strategies'); // strategies | technologies
+            const [activeData, setActiveData] = useState(strategies);
+
+            useEffect(() => {
+                setActiveData(view === 'strategies' ? strategies : technologies);
+            }, [view]);
+
+            return (
+                <div className="min-h-screen bg-slate-50 pb-20">
+                    {/* Header Section */}
+                    <div className="bg-slate-900 text-white pt-16 pb-24 relative overflow-hidden">
+                        {/* Background Decoration */}
+                        <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-20 pointer-events-none">
+                            <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-blue-500 blur-3xl"></div>
+                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] border border-slate-700 rounded-full"></div>
+                            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] border border-slate-700 rounded-full opacity-50"></div>
+                            <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-slate-900 to-transparent"></div>
+                        </div>
+
+                        <div className="container mx-auto px-6 relative z-10 text-center">
+                            <div className="inline-flex items-center gap-2 bg-blue-900/50 border border-blue-700/50 rounded-full px-4 py-1.5 mb-6 text-blue-200 text-sm font-medium animate-fade-in">
+                                <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
+                                Released December 2025
+                            </div>
+                            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 animate-fade-in delay-100">
+                                2026 State CIO Priorities
+                            </h1>
+                            <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto mb-10 animate-fade-in delay-200">
+                                The definitive list of strategic and technological priorities for state government IT leaders.
+                            </p>
+                            
+                            <div className="inline-flex bg-slate-800/80 p-1 rounded-xl backdrop-blur-md border border-slate-700 animate-fade-in delay-300">
+                                <button 
+                                    onClick={() => setView('strategies')}
+                                    className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                                        view === 'strategies' 
+                                            ? 'bg-blue-600 text-white shadow-lg' 
+                                            : 'text-slate-400 hover:text-white hover:bg-slate-700'
+                                    }`}
+                                >
+                                    Top 10 Strategies
+                                </button>
+                                <button 
+                                    onClick={() => setView('technologies')}
+                                    className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                                        view === 'technologies' 
+                                            ? 'bg-blue-600 text-white shadow-lg' 
+                                            : 'text-slate-400 hover:text-white hover:bg-slate-700'
+                                    }`}
+                                >
+                                    Top 10 Technologies
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Content Section */}
+                    <div className="container mx-auto px-6 -mt-16 relative z-20">
+                        <div className="glass-panel rounded-2xl p-6 md:p-10 shadow-xl mb-12">
+                            <div className="flex items-center justify-between mb-8">
+                                <div>
+                                    <h2 className="text-2xl font-bold text-slate-900">
+                                        {view === 'strategies' ? 'Strategic Priorities' : 'Technology Priorities'}
+                                    </h2>
+                                    <p className="text-slate-500 text-sm mt-1">
+                                        Ranked by importance for the 2026 fiscal year
+                                    </p>
+                                </div>
+                                <div className="hidden md:flex items-center gap-2 text-xs font-semibold text-slate-400 uppercase tracking-wider bg-slate-100 px-3 py-1 rounded">
+                                    Source: NASCIO
+                                </div>
+                            </div>
+                            
+                            {/* Grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+                                {activeData.map((item) => (
+                                    <PriorityCard key={item.rank} item={item} />
+                                ))}
+                            </div>
+
+                            {/* Insight Box */}
+                            {view === 'strategies' && (
+                                <div className="mt-8 bg-amber-50 border border-amber-200 rounded-xl p-5 flex items-start gap-4">
+                                    <div className="p-2 bg-amber-100 rounded-lg text-amber-600">
+                                        <Info size={24} />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-amber-900 mb-1">Major Shift: AI Overtakes Cybersecurity</h4>
+                                        <p className="text-amber-800 text-sm leading-relaxed">
+                                            For the first time in over a decade, <strong>Artificial Intelligence</strong> has claimed the #1 spot, ending Cybersecurity's 12-year reign. This signals a massive pivot from purely defensive postures to proactive, transformative technology adoption in state governments.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                        
+                        <footer className="text-center text-slate-400 text-sm pb-10">
+                            <p>Data from NASCIO <a href="https://www.nascio.org/resource-center/resources/state-cio-top-ten-policy-and-technology-priorities-for-2026/">"State CIO Top Ten Policy and Technology Priorities for 2026" report</a></p>
+                            <p className="mt-2">&copy; Dell Technologies - SLG 2026</p>
+                        </footer>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
